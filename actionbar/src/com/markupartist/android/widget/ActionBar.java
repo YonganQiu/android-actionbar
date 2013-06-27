@@ -18,8 +18,6 @@ package com.markupartist.android.widget;
 
 import java.util.LinkedList;
 
-import com.markupartist.android.widget.actionbar.R;
-
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +26,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -36,7 +35,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ActionBar extends RelativeLayout implements OnClickListener {
+import com.markupartist.android.widget.actionbar.R;
+
+public class ActionBar extends RelativeLayout implements OnClickListener, OnLongClickListener {
 
     private LayoutInflater mInflater;
     private RelativeLayout mBarView;
@@ -156,6 +157,16 @@ public class ActionBar extends RelativeLayout implements OnClickListener {
         }
     }
 
+    @Override
+    public boolean onLongClick(View view) {
+        final Object tag = view.getTag();
+        if (tag instanceof Action) {
+            final Action action = (Action) tag;
+            Toast.makeText(getContext(), action.getDescription(), Toast.LENGTH_SHORT).show();
+        }
+        return true;
+    }
+
     /**
      * Adds a list of {@link Action}s.
      * @param actionList the actions to add
@@ -239,6 +250,7 @@ public class ActionBar extends RelativeLayout implements OnClickListener {
 
         view.setTag(action);
         view.setOnClickListener(this);
+        view.setOnLongClickListener(this);
         return view;
     }
 
@@ -254,43 +266,51 @@ public class ActionBar extends RelativeLayout implements OnClickListener {
      */
     public interface Action {
         public int getDrawable();
+        public int getDescription();
         public void performAction(View view);
     }
 
     public static abstract class AbstractAction implements Action {
         final private int mDrawable;
+        final private int mDescription;
 
-        public AbstractAction(int drawable) {
+        public AbstractAction(int drawable, int description) {
             mDrawable = drawable;
+            mDescription = description;
         }
 
         @Override
         public int getDrawable() {
             return mDrawable;
         }
-    }
-
-    public static class IntentAction extends AbstractAction {
-        private Context mContext;
-        private Intent mIntent;
-
-        public IntentAction(Context context, Intent intent, int drawable) {
-            super(drawable);
-            mContext = context;
-            mIntent = intent;
-        }
 
         @Override
-        public void performAction(View view) {
-            try {
-               mContext.startActivity(mIntent); 
-            } catch (ActivityNotFoundException e) {
-                Toast.makeText(mContext,
-                        mContext.getText(R.string.actionbar_activity_not_found),
-                        Toast.LENGTH_SHORT).show();
-            }
+        public int getDescription() {
+            return mDescription;
         }
     }
+
+//    public static class IntentAction extends AbstractAction {
+//        private Context mContext;
+//        private Intent mIntent;
+//
+//        public IntentAction(Context context, Intent intent, int drawable) {
+//            super(drawable);
+//            mContext = context;
+//            mIntent = intent;
+//        }
+//
+//        @Override
+//        public void performAction(View view) {
+//            try {
+//               mContext.startActivity(mIntent); 
+//            } catch (ActivityNotFoundException e) {
+//                Toast.makeText(mContext,
+//                        mContext.getText(R.string.actionbar_activity_not_found),
+//                        Toast.LENGTH_SHORT).show();
+//            }
+//        }
+//    }
 
     /*
     public static abstract class SearchAction extends AbstractAction {
