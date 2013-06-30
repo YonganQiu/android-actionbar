@@ -16,6 +16,7 @@
 
 package com.markupartist.android.widget;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import android.content.ActivityNotFoundException;
@@ -49,6 +50,8 @@ public class ActionBar extends RelativeLayout implements OnClickListener, OnLong
     private ImageButton mHomeBtn;
     private RelativeLayout mHomeLayout;
     private ProgressBar mProgress;
+
+    private HashMap<Integer, View> mActions = new HashMap<Integer, View>();
 
     public ActionBar(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -193,14 +196,41 @@ public class ActionBar extends RelativeLayout implements OnClickListener, OnLong
      * @param index the position at which to add the action
      */
     public void addAction(Action action, int index) {
-        mActionsView.addView(inflateAction(action), index);
+        View v = inflateAction(action);
+        mActionsView.addView(v, index);
+        mActions.put(action.getId(), v);
     }
+
+    /****************Elvis Hew added begin.****************/
+
+    /**
+     * Enable or disable specified action.
+     * 
+     * @param id the id of specified action
+     * @param enable true if enable
+     */
+    public void setActionEnabled(int id, boolean enabled) {
+        mActions.get(id).setEnabled(enabled);
+    }
+
+    /**
+     * Enable or disable all actions.
+     * 
+     * @param enable true if enable
+     */
+    public void setAllActionsEnabled(boolean enabled) {
+        for (View v : mActions.values())
+        v.setEnabled(enabled);
+    }
+
+    /****************Elvis Hew added end.****************/
 
     /**
      * Removes all action views from this action bar
      */
     public void removeAllActions() {
         mActionsView.removeAllViews();
+        mActions.clear();
     }
 
     /**
@@ -208,7 +238,10 @@ public class ActionBar extends RelativeLayout implements OnClickListener, OnLong
      * @param index position of action to remove
      */
     public void removeActionAt(int index) {
+        Action action = (Action) mActionsView.getChildAt(index).getTag();
         mActionsView.removeViewAt(index);
+        mActions.remove(action.getId());
+        
     }
 
     /**
@@ -223,6 +256,7 @@ public class ActionBar extends RelativeLayout implements OnClickListener, OnLong
                 final Object tag = view.getTag();
                 if (tag instanceof Action && tag.equals(action)) {
                     mActionsView.removeView(view);
+                    mActions.remove(action.getId());
                 }
             }
         }
@@ -265,18 +299,26 @@ public class ActionBar extends RelativeLayout implements OnClickListener, OnLong
      * show.
      */
     public interface Action {
+        public int getId();
         public int getDrawable();
         public int getDescription();
         public void performAction(View view);
     }
 
     public static abstract class AbstractAction implements Action {
+        final private int mId;
         final private int mDrawable;
         final private int mDescription;
 
-        public AbstractAction(int drawable, int description) {
+        public AbstractAction(int id, int drawable, int description) {
+            mId = id;
             mDrawable = drawable;
             mDescription = description;
+        }
+
+        @Override
+        public int getId() {
+            return mId;
         }
 
         @Override
